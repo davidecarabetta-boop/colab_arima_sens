@@ -10,7 +10,7 @@ import traceback # Importa il modulo traceback
 warnings.filterwarnings("ignore")
 
 # --- CONFIGURAZIONE (MODIFICA QUESTI TRE VALORI ESSENZIALI) ---
-SERVICE_ACCOUNT_FILE = '/content/drive/MyDrive/ARIMA_test/progetto-mcp-server-791761bd69f4.json' # <-- PERCORSO JSON INSERITO
+SERVICE_ACCOUNT_FILE = 'credentials.json'
 SHEET_URL = 'https://docs.google.com/spreadsheets/d/1rSeZ1BtU3ipbFfnTeeXFKMRsH5r2yjprSTsFUmN7aVs/edit?gid=1633708881#gid=1633708881' # <-- URL DEL FOGLIO 'sensation_arima'
 INPUT_SHEET_NAME = 'sensation_dati_storici_arima' # <-- Foglio interno con i dati GA4
 OUTPUT_SHEET_NAME = 'Previsione_Output_SARIMAX'
@@ -24,14 +24,12 @@ SEASONAL_ORDER = (0, 0, 1, 7)
 # ------------------------------------
 
 def authenticate_google_sheets():
-    """Autentica il Service Account usando API aggiornata."""
-    
     scope = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
 
-    creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
+    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=scope)
     client = gspread.authorize(creds)
 
     print("Autenticazione Google Sheets OK con:", creds.service_account_email)
