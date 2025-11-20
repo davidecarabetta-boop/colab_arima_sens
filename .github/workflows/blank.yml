@@ -1,0 +1,27 @@
+name: Automazione Script
+
+on:
+  schedule:
+    - cron: "0 8 * * *"   # esegue ogni giorno alle 8
+  workflow_dispatch:      # consente avvio manuale
+
+jobs:
+  run-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run script
+        run: |
+          python colab_arima.py
