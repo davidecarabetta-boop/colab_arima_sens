@@ -23,7 +23,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Create credentials file
-        run: echo "${{ secrets.GOOGLE_CREDENTIALS }}" > credentials.json
+        run: echo "${{ secrets.GOOGLE_CREDENTIALS }}" | base64 --decode > credentials.json
 
 
       - name: Run script
