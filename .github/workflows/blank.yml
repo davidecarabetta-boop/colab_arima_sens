@@ -22,6 +22,10 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Create credentials file
+        run: echo "${{ secrets.GOOGLE_CREDENTIALS }}" > credentials.json
+
+
       - name: Run script
         run: |
           python python_arima.py
