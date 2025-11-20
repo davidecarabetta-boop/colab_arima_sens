@@ -24,4 +24,4 @@ jobs:
 
       - name: Run script
         run: |
-          python colab_arima.py
+          python python_arima.py
