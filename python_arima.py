@@ -1,5 +1,6 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import warnings
@@ -23,10 +24,17 @@ SEASONAL_ORDER = (0, 0, 1, 7)
 # ------------------------------------
 
 def authenticate_google_sheets():
-    """Autentica l'Account di Servizio tramite il file JSON."""
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
+    """Autentica il Service Account usando API aggiornata."""
+    
+    scope = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
     client = gspread.authorize(creds)
+
+    print("Autenticazione Google Sheets OK con:", creds.service_account_email)
     return client
 
 def load_and_clean_data(client):
