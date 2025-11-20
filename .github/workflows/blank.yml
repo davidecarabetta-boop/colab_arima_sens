@@ -28,4 +28,4 @@ jobs:
 
       - name: Run script
         run: |
-          python  test_sheet.py
+          python  python_arima.py
