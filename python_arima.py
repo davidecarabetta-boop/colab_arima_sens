@@ -39,22 +39,38 @@ def load_and_clean_data(client):
         print("ERRORE: Il dataframe è vuoto!")
         sys.exit(1)
 
+    # 1. Conversione Data e rimozione righe nulle
     df['Data'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce')
-    df = df.set_index('Data').sort_index().dropna(subset=['Entrate totali'])
+    df = df.dropna(subset=['Data'])
 
+    # 2. Pulizia Numerica
     df['Entrate totali'] = df['Entrate totali'].astype(str).str.replace('€', '').str.strip()
     df['Entrate totali'] = df['Entrate totali'].str.replace('.', '', regex=False)
     df['Entrate totali'] = pd.to_numeric(df['Entrate totali'].str.replace(',', '.', regex=False), errors='coerce')
+    df = df.dropna(subset=['Entrate totali'])
 
+    # --- FIX CRITICO: AGGREGAZIONE DUPLICATI ---
+    # Se ci sono date doppie, sommiamo le entrate. Risolve il ValueError.
+    df = df.groupby('Data')['Entrate totali'].sum().reset_index()
+    # -------------------------------------------
+
+    # 3. Imposta Indice e ordina temporalmente
+    df = df.set_index('Data').sort_index()
+
+    # 4. Filtro e Trattamento Outlier
     df_filtered = df[df.index >= RETRAIN_START_DATE].copy()
     df_cleaned = df_filtered[df_filtered.index != OUTLIER_DATE].copy()
     
     endog_original = df_cleaned['Entrate totali'].copy()
+    
+    # Ora il reindex funzionerà perché le date sono univoche
     full_index = pd.date_range(start=endog_original.index.min(), end=endog_original.index.max(), freq='D')
     endog_continuous = endog_original.reindex(full_index)
 
+    # Riempimento buchi (es. giorni mancanti)
     endog_final_fixed = endog_continuous.fillna(method='ffill')
     endog_final_fixed.index.freq = 'D'
+    
     return endog_final_fixed
 
 def run_sarimax_forecast(endog_series, steps):
