@@ -43,7 +43,11 @@ def load_and_clean_data(client):
     sheet = client.open_by_url(SHEET_URL).worksheet(INPUT_SHEET_NAME)
     data = sheet.get_all_records()
     df = pd.DataFrame(data)
-
+# Dopo df = pd.DataFrame(data)
+if df.empty:
+    print("ERRORE: Il dataframe è vuoto! La sorgente dati non sta restituendo nulla.")
+    import sys
+    sys.exit(1) # Forza il fallimento della Action se non ci sono dati
     # 2. Pulizia Iniziale e Indice
     df['Data'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce')
     df = df.set_index('Data').sort_index().dropna(subset=['Entrate totali'])
