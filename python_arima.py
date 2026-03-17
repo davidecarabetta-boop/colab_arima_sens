@@ -141,8 +141,8 @@ if __name__ == '__main__':
 
         print("\n*** Pipeline SARIMAX completata con successo! Ora connetti Looker Studio! ***")
 
-    except Exception as e:
-        print(f"\nERRORE CRITICO NELLA PIPELINE: {e}")
-        print("Traceback completo dell'errore:")
-        print(traceback.format_exc())
-        print("Verifica i percorsi, gli URL, e i permessi dell'Account di Servizio.")
+except Exception as e:
+        print(f"\nERRORE CRITICO: {e}")
+        traceback.print_exc()
+        import sys
+        sys.exit(1) # <--- QUESTO FORZA GITHUB A DARE ROSSO SE FALLISCE
