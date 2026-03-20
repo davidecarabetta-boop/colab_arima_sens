@@ -3,8 +3,12 @@ from oauth2client.service_account import ServiceAccountCredentials
 from google.oauth2.service_account import Credentials
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+from prophet import Prophet
 import warnings
 import traceback
+import numpy as np
+import os
+import json
 import sys
 import holidays  
 
@@ -30,67 +34,124 @@ def authenticate_google_sheets():
     print("Autenticazione Google Sheets OK.")
     return client
 
+# def load_and_clean_data(client):
+#     print("Fase 1: Caricamento e Pulizia Dati...")
+#     sheet = client.open_by_url(SHEET_URL).worksheet(INPUT_SHEET_NAME)
+#     data = sheet.get_all_records()
+#     df = pd.DataFrame(data)
+
+#     if df.empty:
+#         print("ERRORE: Il dataframe è vuoto!")
+#         sys.exit(1)
+
+#     # 1. Conversione Data e rimozione righe nulle
+#     df['Data'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce')
+#     df = df.dropna(subset=['Data'])
+
+#     # 2. Pulizia Numerica
+#     df['Entrate totali'] = df['Entrate totali'].astype(str).str.replace('€', '').str.strip()
+#     df['Entrate totali'] = df['Entrate totali'].str.replace('.', '', regex=False)
+#     df['Entrate totali'] = pd.to_numeric(df['Entrate totali'].str.replace(',', '.', regex=False), errors='coerce')
+#     df = df.dropna(subset=['Entrate totali'])
+
+#     # --- FIX CRITICO: AGGREGAZIONE DUPLICATI ---
+#     # Se ci sono date doppie, sommiamo le entrate. Risolve il ValueError.
+#     df = df.groupby('Data')['Entrate totali'].sum().reset_index()
+#     # -------------------------------------------
+
+#     # 3. Imposta Indice e ordina temporalmente
+#     df = df.set_index('Data').sort_index()
+
+#     # 4. Filtro e Trattamento Outlier
+#     df_filtered = df[df.index >= RETRAIN_START_DATE].copy()
+#     df_cleaned = df_filtered[df_filtered.index != OUTLIER_DATE].copy()
+    
+#     endog_original = df_cleaned['Entrate totali'].copy()
+    
+#     # Ora il reindex funzionerà perché le date sono univoche
+#     full_index = pd.date_range(start=endog_original.index.min(), end=endog_original.index.max(), freq='D')
+#     endog_continuous = endog_original.reindex(full_index)
+
+#     # Riempimento buchi (es. giorni mancanti)
+#     endog_final_fixed = endog_continuous.fillna(method='ffill')
+#     endog_final_fixed.index.freq = 'D'
+    
+#     return endog_final_fixed
+
 def load_and_clean_data(client):
-    print("Fase 1: Caricamento e Pulizia Dati...")
     sheet = client.open_by_url(SHEET_URL).worksheet(INPUT_SHEET_NAME)
-    data = sheet.get_all_records()
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(sheet.get_all_records())
 
-    if df.empty:
-        print("ERRORE: Il dataframe è vuoto!")
-        sys.exit(1)
+    # Pulizia Date
+    df['ds'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce')
+    df = df.dropna(subset=['ds'])
 
-    # 1. Conversione Data e rimozione righe nulle
-    df['Data'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce')
-    df = df.dropna(subset=['Data'])
+    # Pulizia Valuta
+    df['y'] = df['Entrate totali'].astype(str).str.replace('€', '').str.replace('.', '', regex=False)
+    df['y'] = pd.to_numeric(df['y'].str.replace(',', '.', regex=False), errors='coerce')
+    df = df.dropna(subset=['y'])
 
-    # 2. Pulizia Numerica
-    df['Entrate totali'] = df['Entrate totali'].astype(str).str.replace('€', '').str.strip()
-    df['Entrate totali'] = df['Entrate totali'].str.replace('.', '', regex=False)
-    df['Entrate totali'] = pd.to_numeric(df['Entrate totali'].str.replace(',', '.', regex=False), errors='coerce')
-    df = df.dropna(subset=['Entrate totali'])
-
-    # --- FIX CRITICO: AGGREGAZIONE DUPLICATI ---
-    # Se ci sono date doppie, sommiamo le entrate. Risolve il ValueError.
-    df = df.groupby('Data')['Entrate totali'].sum().reset_index()
-    # -------------------------------------------
-
-    # 3. Imposta Indice e ordina temporalmente
-    df = df.set_index('Data').sort_index()
-
-    # 4. Filtro e Trattamento Outlier
-    df_filtered = df[df.index >= RETRAIN_START_DATE].copy()
-    df_cleaned = df_filtered[df_filtered.index != OUTLIER_DATE].copy()
+    # Aggregazione duplicati (fondamentale per Prophet)
+    df = df.groupby('ds')['y'].sum().reset_index()
     
-    endog_original = df_cleaned['Entrate totali'].copy()
+    # Filtro Outlier (es. valori negativi o errori macroscopici nel database)
+    df = df[df['y'] >= 0]
     
-    # Ora il reindex funzionerà perché le date sono univoche
-    full_index = pd.date_range(start=endog_original.index.min(), end=endog_original.index.max(), freq='D')
-    endog_continuous = endog_original.reindex(full_index)
+    return df
 
-    # Riempimento buchi (es. giorni mancanti)
-    endog_final_fixed = endog_continuous.fillna(method='ffill')
-    endog_final_fixed.index.freq = 'D'
+def run_prophet_forecast(df, steps):
+    print("Inizio Addestramento Prophet...")
     
-    return endog_final_fixed
-        
-def run_sarimax_forecast(endog_series, steps):
-    print("Fase 2: Addestramento Modello...")
-    model = SARIMAX(endog_series, order=ORDER, seasonal_order=SEASONAL_ORDER,
-                    enforce_stationarity=False, enforce_invertibility=False)
-    results = model.fit(disp=False)
-    
-    forecast_object = results.get_forecast(steps=steps)
-    forecast_result = forecast_object.predicted_mean / 100
-    forecast_ci = forecast_object.conf_int() / 100
+    # Inizializza il modello con stagionalità settimanale attiva
+    model = Prophet(
+        yearly_seasonality=False, # Hai meno di un anno, meglio tenerla spenta
+        weekly_seasonality=True,
+        daily_seasonality=False,
+        changepoint_prior_scale=0.05 # Rende il trend più o meno flessibile
+    )
 
-    forecast_df = pd.DataFrame({
-        'Data': forecast_result.index.strftime('%Y-%m-%d'),
-        'Previsione_media': forecast_result.round(2),
-        'Limite_superiore_CI': forecast_ci.iloc[:, 1].round(2),
-        'Limite_inferiore_CI': forecast_ci.iloc[:, 0].round(2)
+    # Aggiunge i festivi italiani automaticamente
+    model.add_country_holidays(country_name='IT')
+
+    model.fit(df)
+    
+    # Crea dataframe per il futuro
+    future = model.make_future_dataframe(periods=steps)
+    forecast = model.predict(future)
+
+    # Estraiamo solo i nuovi giorni previsti
+    forecast_result = forecast.tail(steps).copy()
+    
+    # Conversione scala (se i tuoi dati sono in centesimi come prima)
+    # Se i tuoi dati sono già in Euro "interi", togli il "/ 100"
+    divisor = 100 
+    
+    output_df = pd.DataFrame({
+        'Data': forecast_result['ds'].dt.strftime('%Y-%m-%d'),
+        'Previsione_media': (forecast_result['yhat'] / divisor).clip(lower=0).round(2),
+        'Limite_superiore_CI': (forecast_result['yhat_upper'] / divisor).clip(lower=0).round(2),
+        'Limite_inferiore_CI': (forecast_result['yhat_lower'] / divisor).clip(lower=0).round(2)
     })
-    return forecast_df
+    
+    return output_df
+
+# def run_sarimax_forecast(endog_series, steps):
+#     print("Fase 2: Addestramento Modello...")
+#     model = SARIMAX(endog_series, order=ORDER, seasonal_order=SEASONAL_ORDER,
+#                     enforce_stationarity=False, enforce_invertibility=False)
+#     results = model.fit(disp=False)
+    
+#     forecast_object = results.get_forecast(steps=steps)
+#     forecast_result = forecast_object.predicted_mean / 100
+#     forecast_ci = forecast_object.conf_int() / 100
+
+#     forecast_df = pd.DataFrame({
+#         'Data': forecast_result.index.strftime('%Y-%m-%d'),
+#         'Previsione_media': forecast_result.round(2),
+#         'Limite_superiore_CI': forecast_ci.iloc[:, 1].round(2),
+#         'Limite_inferiore_CI': forecast_ci.iloc[:, 0].round(2)
+#     })
+#     return forecast_df
 
 def push_to_google_sheets(client, df_forecast):
     print(f"Fase 3: Salvataggio su {OUTPUT_SHEET_NAME}...")
@@ -105,14 +166,24 @@ def push_to_google_sheets(client, df_forecast):
     worksheet.update('A1', data_to_write)
     print("Update completato.")
 
+# if __name__ == '__main__':
+#     try:
+#         client = authenticate_google_sheets()
+#         endog_data = load_and_clean_data(client)
+#         forecast_output_df = run_sarimax_forecast(endog_data, FORECAST_STEPS)
+#         push_to_google_sheets(client, forecast_output_df)
+#         print("\n*** Pipeline completata con successo! ***")
+#     except Exception as e:
+#         print(f"\nERRORE CRITICO: {e}")
+#         traceback.print_exc()
+#         sys.exit(1)
+
 if __name__ == '__main__':
     try:
         client = authenticate_google_sheets()
-        endog_data = load_and_clean_data(client)
-        forecast_output_df = run_sarimax_forecast(endog_data, FORECAST_STEPS)
-        push_to_google_sheets(client, forecast_output_df)
-        print("\n*** Pipeline completata con successo! ***")
+        clean_df = load_and_clean_data(client)
+        forecast_df = run_prophet_forecast(clean_df, FORECAST_STEPS)
+        push_to_sheets(client, forecast_df)
     except Exception as e:
-        print(f"\nERRORE CRITICO: {e}")
-        traceback.print_exc()
+        print(f"ERRORE: {e}")
         sys.exit(1)
