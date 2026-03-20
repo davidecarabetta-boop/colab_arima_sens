@@ -124,22 +124,18 @@ def run_prophet_forecast(df, steps):
     df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
 
     # Creiamo i limiti che diventano nulli per i dati reali
-    # Usiamo astype(object) per permettere l'inserimento di None/Null senza errori di tipo
     df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
     df_output['lower_final'] = np.where(df_output['is_real'], None, df_output['yhat_lower'])
     
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
-        # CORREZIONE 1: Usa is_real per evitare errori con gli "zeri"
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Dato_Finale': (df_output['Valore_Combinato'] / divisor).clip(lower=0).round(2),
-        # CORREZIONE 2: Usa le colonne filtrate (upper_final / lower_final)
         'CI_Superiore': (pd.to_numeric(df_output['upper_final'], errors='coerce') / divisor).round(2),
         'CI_Inferiore': (pd.to_numeric(df_output['lower_final'], errors='coerce') / divisor).round(2)
     })
     
-    # Sostituisce i NaN con None (per far sì che Google Sheets veda le celle vuote)
-    final_df = final_df.where(pd.notnull(final_df), None)
+    final_df = final_df.replace([np.inf, -np.inf], np.nan).fillna("")
     
     return final_df
 
