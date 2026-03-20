@@ -102,38 +102,47 @@ def load_and_clean_data(client):
 def run_prophet_forecast(df, steps):
     print("Inizio Addestramento Prophet...")
     
-    # Inizializza il modello con stagionalità settimanale attiva
     model = Prophet(
-        yearly_seasonality=False, # Hai meno di un anno, meglio tenerla spenta
+        yearly_seasonality=False,
         weekly_seasonality=True,
         daily_seasonality=False,
-        changepoint_prior_scale=0.05 # Rende il trend più o meno flessibile
+        changepoint_prior_scale=0.05 
     )
-
-    # Aggiunge i festivi italiani automaticamente
+    model.add_seasonality(name='monthly', period=30.5, fourier_order=5)
     model.add_country_holidays(country_name='IT')
-
     model.fit(df)
-    
-    # Crea dataframe per il futuro
+
+    # Crea dataframe per il futuro + include il passato
     future = model.make_future_dataframe(periods=steps)
     forecast = model.predict(future)
 
-    # Estraiamo solo i nuovi giorni previsti
-    forecast_result = forecast.tail(steps).copy()
+    # Uniamo i dati reali con quelli predetti
+    # yhat è la stima del modello. Per i dati passati useremo 'y' (reale)
+    # Per i dati futuri useremo 'yhat' (previsione)
     
-    # Conversione scala (se i tuoi dati sono in centesimi come prima)
-    # Se i tuoi dati sono già in Euro "interi", togli il "/ 100"
-    divisor = 100 
+    # Creiamo un dataframe di supporto per l'output
+    divisor = 100
+    df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
     
-    output_df = pd.DataFrame({
-        'Data': forecast_result['ds'].dt.strftime('%Y-%m-%d'),
-        'Previsione_media': (forecast_result['yhat'] / divisor).clip(lower=0).round(2),
-        'Limite_superiore_CI': (forecast_result['yhat_upper'] / divisor).clip(lower=0).round(2),
-        'Limite_inferiore_CI': (forecast_result['yhat_lower'] / divisor).clip(lower=0).round(2)
+    # Portiamo i valori reali nel dataframe finale per la colonna "Storico"
+    df_output = df_output.merge(df[['ds', 'y']], on='ds', how='left')
+
+    # Creiamo una colonna "Valore Finale" che unisce Reali e Previsioni
+    # Se c'è il dato reale (y), usa quello, altrimenti usa la previsione (yhat)
+    df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
+
+    final_df = pd.DataFrame({
+        'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
+        'Tipo': df_output['y'].apply(lambda x: 'REALE' if pd.notsuffix(x) else 'PREVISIONE'),
+        'Dato_Finale': (df_output['Valore_Combinato'] / divisor).clip(lower=0).round(2),
+        'CI_Superiore': (df_output['yhat_upper'] / divisor).clip(lower=0).round(2),
+        'CI_Inferiore': (df_output['yhat_lower'] / divisor).clip(lower=0).round(2)
     })
     
-    return output_df
+    # Nota: ho aggiunto la colonna 'Tipo' così su Google Sheets 
+    # puoi colorare diversamente le righe o filtrare.
+    
+    return final_df
 
 # def run_sarimax_forecast(endog_series, steps):
 #     print("Fase 2: Addestramento Modello...")
@@ -159,7 +168,7 @@ def push_to_google_sheets(client, df_forecast):
     try:
         worksheet = sheet.worksheet(OUTPUT_SHEET_NAME)
     except gspread.WorksheetNotFound:
-        worksheet = sheet.add_worksheet(title=OUTPUT_SHEET_NAME, rows=100, cols=10)
+        worksheet = sheet.add_worksheet(title=OUTPUT_SHEET_NAME, rows=1000, cols=10)
 
     data_to_write = [df_forecast.columns.values.tolist()] + df_forecast.values.tolist()
     worksheet.clear()
