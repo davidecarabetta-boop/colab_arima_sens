@@ -6,6 +6,7 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 import warnings
 import traceback
 import sys
+import holidays  
 
 # Ignora i warning
 warnings.filterwarnings("ignore")
@@ -17,7 +18,7 @@ INPUT_SHEET_NAME = 'sensation_dati_storici_arima'
 OUTPUT_SHEET_NAME = 'Previsione_Output_SARIMAX'
 
 FORECAST_STEPS = 30
-RETRAIN_START_DATE = '2025-06-01'
+RETRAIN_START_DATE = '2025-09-01'
 OUTLIER_DATE = pd.to_datetime('2025-10-31')
 ORDER = (0, 1, 1)
 SEASONAL_ORDER = (0, 0, 1, 7)
@@ -70,16 +71,33 @@ def load_and_clean_data(client):
     # Riempimento buchi (es. giorni mancanti)
     endog_final_fixed = endog_continuous.fillna(method='ffill')
     endog_final_fixed.index.freq = 'D'
+    exo_data = prepare_exogenous_variables(endog_final_fixed.index)
     
-    return endog_final_fixed
+    return endog_final_fixed, exo_data
+    
+def prepare_exogenous_variables(index):
+    it_holidays = holidays.Italy()
+    exo = pd.DataFrame(index=index)
+    exo['is_holiday'] = exo.index.map(lambda x: 1 if x in it_holidays else 0)
+    return exo
 
-def run_sarimax_forecast(endog_series, steps):
-    print("Fase 2: Addestramento Modello...")
-    model = SARIMAX(endog_series, order=ORDER, seasonal_order=SEASONAL_ORDER,
-                    enforce_stationarity=False, enforce_invertibility=False)
+def run_sarimax_forecast(endog_series, exo_train, steps):
+    
+    # Definiamo le variabili esogene per il futuro (i prossimi 30 giorni)
+    future_index = pd.date_range(start=endog_series.index[-1] + pd.Timedelta(days=1), periods=steps, freq='D')
+    exo_forecast = prepare_exogenous_variables(future_index)
+
+    model = SARIMAX(endog_series, 
+                    exog=exo_train, 
+                    order=ORDER, 
+                    seasonal_order=SEASONAL_ORDER,
+                    enforce_stationarity=False, 
+                    enforce_invertibility=False)
+    
     results = model.fit(disp=False)
     
-    forecast_object = results.get_forecast(steps=steps)
+    # Previsione passando le esogene future
+    forecast_object = results.get_forecast(steps=steps, exog=exo_forecast) # <--- E qui
     forecast_result = forecast_object.predicted_mean / 100
     forecast_ci = forecast_object.conf_int() / 100
 
@@ -87,9 +105,41 @@ def run_sarimax_forecast(endog_series, steps):
         'Data': forecast_result.index.strftime('%Y-%m-%d'),
         'Previsione_media': forecast_result.round(2),
         'Limite_superiore_CI': forecast_ci.iloc[:, 1].round(2),
-        'Limite_inferiore_CI': forecast_ci.iloc[:, 0].round(2)
+        'Limite_inferiore_CI': forecast_ci.iloc[:, 0].round(2),
+        'Is_Holiday': exo_forecast['is_holiday'].values # Opzionale: vedi se è festivo nel log
     })
     return forecast_df
+
+# --- Modifica nel Main ---
+if __name__ == '__main__':
+    try:
+        client = authenticate_google_sheets()
+        # Ora la funzione restituisce due oggetti
+        endog_data, exo_data = load_and_clean_data(client) 
+        # Passiamo exo_data al forecast
+        forecast_output_df = run_sarimax_forecast(endog_data, exo_data, FORECAST_STEPS)
+        push_to_google_sheets(client, forecast_output_df)
+        print("\n*** Pipeline con Esogene completata! ***")
+    except Exception as e:
+        # ... (gestione errore)
+        
+# def run_sarimax_forecast(endog_series, steps):
+#     print("Fase 2: Addestramento Modello...")
+#     model = SARIMAX(endog_series, order=ORDER, seasonal_order=SEASONAL_ORDER,
+#                     enforce_stationarity=False, enforce_invertibility=False)
+#     results = model.fit(disp=False)
+    
+#     forecast_object = results.get_forecast(steps=steps)
+#     forecast_result = forecast_object.predicted_mean / 100
+#     forecast_ci = forecast_object.conf_int() / 100
+
+#     forecast_df = pd.DataFrame({
+#         'Data': forecast_result.index.strftime('%Y-%m-%d'),
+#         'Previsione_media': forecast_result.round(2),
+#         'Limite_superiore_CI': forecast_ci.iloc[:, 1].round(2),
+#         'Limite_inferiore_CI': forecast_ci.iloc[:, 0].round(2)
+#     })
+#     return forecast_df
 
 def push_to_google_sheets(client, df_forecast):
     print(f"Fase 3: Salvataggio su {OUTPUT_SHEET_NAME}...")
@@ -107,8 +157,8 @@ def push_to_google_sheets(client, df_forecast):
 if __name__ == '__main__':
     try:
         client = authenticate_google_sheets()
-        endog_data = load_and_clean_data(client)
-        forecast_output_df = run_sarimax_forecast(endog_data, FORECAST_STEPS)
+        endog_data, exo_data = load_and_clean_data(client)
+        forecast_output_df = run_sarimax_forecast(endog_data, exo_data, FORECAST_STEPS)
         push_to_google_sheets(client, forecast_output_df)
         print("\n*** Pipeline completata con successo! ***")
     except Exception as e:
