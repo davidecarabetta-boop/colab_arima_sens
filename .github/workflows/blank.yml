@@ -12,11 +12,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4 # AGGIORNATO (Risolve deprecazione Node)
 
-      - name: Installa librerie
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
       - name: Setup Python
         uses: actions/setup-python@v5 # AGGIORNATO (Risolve deprecazione Node)
         with:
@@ -26,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas gspread oauth2client google-auth statsmodels scipy numpy
+          pip install pandas gspread oauth2client google-auth statsmodels scipy numpy holidays
 
       - name: Create credentials file
         run: |
