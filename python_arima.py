@@ -131,6 +131,15 @@ def run_prophet_forecast(df, steps):
     # Se c'è il dato reale (y), usa quello, altrimenti usa la previsione (yhat)
     df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
 
+    # Determiniamo se il dato è REALE o PREVISIONE
+    df_output['is_real'] = pd.notnull(df_output['y'])
+    df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
+
+    # --- LOGICA RICHIESTA: Null se il dato è reale ---
+    # Usiamo np.where: se is_real è True, metti None (null), altrimenti metti il valore calcolato
+    df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
+    df_output['lower_final'] = np.where(df_output['is_real'], None, df_output['yhat_lower'])
+    
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_output['y'].apply(lambda x: 'REALE' if pd.notnull(x) else 'PREVISIONE'),
