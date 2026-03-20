@@ -183,7 +183,7 @@ if __name__ == '__main__':
         client = authenticate_google_sheets()
         clean_df = load_and_clean_data(client)
         forecast_df = run_prophet_forecast(clean_df, FORECAST_STEPS)
-        push_to_sheets(client, forecast_df)
+        push_to_google_sheets(client, forecast_df)
     except Exception as e:
         print(f"ERRORE: {e}")
         sys.exit(1)
