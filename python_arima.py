@@ -23,7 +23,7 @@ OUTPUT_SHEET_NAME = 'Previsione_Output_SARIMAX'
 
 FORECAST_STEPS = 30
 RETRAIN_START_DATE = '2025-09-01'
-OUTLIER_DATE = pd.to_datetime('2026-03-14')
+OUTLIER_DATE = pd.to_datetime('2026-03-18')
 ORDER = (1, 0, 1)
 SEASONAL_ORDER = (1, 0, 0, 7)
 
@@ -106,7 +106,7 @@ def run_prophet_forecast(df, steps):
         yearly_seasonality=False,
         weekly_seasonality=True,
         daily_seasonality=False,
-        changepoint_prior_scale=0.05 
+        changepoint_prior_scale=0.1 
     )
     model.add_seasonality(name='monthly', period=30.5, fourier_order=5)
     model.add_country_holidays(country_name='IT')
@@ -133,7 +133,7 @@ def run_prophet_forecast(df, steps):
 
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
-        'Tipo': df_output['y'].apply(lambda x: 'REALE' if pd.notsuffix(x) else 'PREVISIONE'),
+        'Tipo': df_output['y'].apply(lambda x: 'REALE' if pd.notnull(x) else 'PREVISIONE'),
         'Dato_Finale': (df_output['Valore_Combinato'] / divisor).clip(lower=0).round(2),
         'CI_Superiore': (df_output['yhat_upper'] / divisor).clip(lower=0).round(2),
         'CI_Inferiore': (df_output['yhat_lower'] / divisor).clip(lower=0).round(2)
