@@ -31,4 +31,4 @@ jobs:
 
       - name: Run script
         run: |
-          python python_arima.py
+          python python_prophet.py
