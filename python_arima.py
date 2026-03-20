@@ -19,7 +19,7 @@ OUTPUT_SHEET_NAME = 'Previsione_Output_SARIMAX'
 
 FORECAST_STEPS = 30
 RETRAIN_START_DATE = '2025-09-01'
-OUTLIER_DATE = pd.to_datetime('2025-10-31')
+OUTLIER_DATE = pd.to_datetime('2026-02-28')
 ORDER = (0, 1, 1)
 SEASONAL_ORDER = (0, 0, 1, 7)
 
@@ -110,18 +110,18 @@ def run_sarimax_forecast(endog_series, exo_train, steps):
     })
     return forecast_df
 
-# --- Modifica nel Main ---
-if __name__ == '__main__':
-    try:
-        client = authenticate_google_sheets()
-        # Ora la funzione restituisce due oggetti
-        endog_data, exo_data = load_and_clean_data(client) 
-        # Passiamo exo_data al forecast
-        forecast_output_df = run_sarimax_forecast(endog_data, exo_data, FORECAST_STEPS)
-        push_to_google_sheets(client, forecast_output_df)
-        print("\n*** Pipeline con Esogene completata! ***")
-    except Exception as e:
-        # ... (gestione errore)
+# # --- Modifica nel Main ---
+# if __name__ == '__main__':
+#     try:
+#         client = authenticate_google_sheets()
+#         # Ora la funzione restituisce due oggetti
+#         endog_data, exo_data = load_and_clean_data(client) 
+#         # Passiamo exo_data al forecast
+#         forecast_output_df = run_sarimax_forecast(endog_data, exo_data, FORECAST_STEPS)
+#         push_to_google_sheets(client, forecast_output_df)
+#         print("\n*** Pipeline con Esogene completata! ***")
+#     except Exception as e:
+#         # ... (gestione errore)
         
 # def run_sarimax_forecast(endog_series, steps):
 #     print("Fase 2: Addestramento Modello...")
