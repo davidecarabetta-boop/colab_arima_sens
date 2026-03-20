@@ -112,42 +112,33 @@ def run_prophet_forecast(df, steps):
     model.add_country_holidays(country_name='IT')
     model.fit(df)
 
-    # Crea dataframe per il futuro + include il passato
     future = model.make_future_dataframe(periods=steps)
     forecast = model.predict(future)
 
-    # Uniamo i dati reali con quelli predetti
-    # yhat è la stima del modello. Per i dati passati useremo 'y' (reale)
-    # Per i dati futuri useremo 'yhat' (previsione)
-    
-    # Creiamo un dataframe di supporto per l'output
     divisor = 100
     df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
-    
-    # Portiamo i valori reali nel dataframe finale per la colonna "Storico"
     df_output = df_output.merge(df[['ds', 'y']], on='ds', how='left')
 
-    # Creiamo una colonna "Valore Finale" che unisce Reali e Previsioni
-    # Se c'è il dato reale (y), usa quello, altrimenti usa la previsione (yhat)
-    df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
-
-    # Determiniamo se il dato è REALE o PREVISIONE
+    # Identifichiamo i dati reali
     df_output['is_real'] = pd.notnull(df_output['y'])
     df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
 
-    # --- LOGICA RICHIESTA: Null se il dato è reale ---
-    # Usiamo np.where: se is_real è True, metti None (null), altrimenti metti il valore calcolato
+    # Creiamo i limiti che diventano nulli per i dati reali
+    # Usiamo astype(object) per permettere l'inserimento di None/Null senza errori di tipo
     df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
     df_output['lower_final'] = np.where(df_output['is_real'], None, df_output['yhat_lower'])
     
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
-        'Tipo': df_output['y'].apply(lambda x: 'REALE' if x else 'PREVISIONE'),
+        # CORREZIONE 1: Usa is_real per evitare errori con gli "zeri"
+        'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Dato_Finale': (df_output['Valore_Combinato'] / divisor).clip(lower=0).round(2),
-        'CI_Superiore': (df_output['yhat_upper'] / divisor).clip(lower=0).round(2),
-        'CI_Inferiore': (df_output['yhat_lower'] / divisor).clip(lower=0).round(2)
+        # CORREZIONE 2: Usa le colonne filtrate (upper_final / lower_final)
+        'CI_Superiore': (pd.to_numeric(df_output['upper_final'], errors='coerce') / divisor).round(2),
+        'CI_Inferiore': (pd.to_numeric(df_output['lower_final'], errors='coerce') / divisor).round(2)
     })
     
+    # Sostituisce i NaN con None (per far sì che Google Sheets veda le celle vuote)
     final_df = final_df.where(pd.notnull(final_df), None)
     
     return final_df
