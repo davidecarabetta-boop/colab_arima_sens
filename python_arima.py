@@ -73,12 +73,6 @@ def load_and_clean_data(client):
     endog_final_fixed.index.freq = 'D'
     
     return endog_final_fixed
-    
-def prepare_exogenous_variables(index):
-    it_holidays = holidays.Italy()
-    exo = pd.DataFrame(index=index)
-    exo['is_holiday'] = exo.index.map(lambda x: 1 if x in it_holidays else 0)
-    return exo
         
 def run_sarimax_forecast(endog_series, steps):
     print("Fase 2: Addestramento Modello...")
@@ -114,7 +108,7 @@ def push_to_google_sheets(client, df_forecast):
 if __name__ == '__main__':
     try:
         client = authenticate_google_sheets()
-        endog_data, exo_data = load_and_clean_data(client)
+        endog_data = load_and_clean_data(client)
         forecast_output_df = run_sarimax_forecast(endog_data, FORECAST_STEPS)
         push_to_google_sheets(client, forecast_output_df)
         print("\n*** Pipeline completata con successo! ***")
