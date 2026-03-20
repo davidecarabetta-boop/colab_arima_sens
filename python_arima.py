@@ -20,8 +20,8 @@ OUTPUT_SHEET_NAME = 'Previsione_Output_SARIMAX'
 FORECAST_STEPS = 30
 RETRAIN_START_DATE = '2025-09-01'
 OUTLIER_DATE = pd.to_datetime('2026-03-14')
-ORDER = (0, 1, 1)
-SEASONAL_ORDER = (0, 0, 1, 7)
+ORDER = (1, 0, 1)
+SEASONAL_ORDER = (1, 0, 0, 7)
 
 def authenticate_google_sheets():
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
