@@ -142,14 +142,13 @@ def run_prophet_forecast(df, steps):
     
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
-        'Tipo': df_output['y'].apply(lambda x: 'REALE' if pd.notnull(x) else 'PREVISIONE'),
+        'Tipo': df_output['y'].apply(lambda x: 'REALE' if x else 'PREVISIONE'),
         'Dato_Finale': (df_output['Valore_Combinato'] / divisor).clip(lower=0).round(2),
         'CI_Superiore': (df_output['yhat_upper'] / divisor).clip(lower=0).round(2),
         'CI_Inferiore': (df_output['yhat_lower'] / divisor).clip(lower=0).round(2)
     })
     
-    # Nota: ho aggiunto la colonna 'Tipo' così su Google Sheets 
-    # puoi colorare diversamente le righe o filtrare.
+    final_df = final_df.where(pd.notnull(final_df), None)
     
     return final_df
 
