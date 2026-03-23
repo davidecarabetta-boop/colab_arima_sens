@@ -91,12 +91,13 @@ def load_and_clean_data(client):
     df['y'] = pd.to_numeric(df['y'].str.replace(',', '.', regex=False), errors='coerce')
     df = df.dropna(subset=['y'])
 
+    df['ds'] = pd.to_datetime(df['ds']) + pd.to_timedelta(1, unit='d')
     # Aggregazione duplicati (fondamentale per Prophet)
     df = df.groupby('ds')['y'].sum().reset_index()
     
     # Filtro Outlier (es. valori negativi o errori macroscopici nel database)
     df = df[df['y'] >= 0]
-    
+
     return df
 
 def run_prophet_forecast(df, steps):
