@@ -121,7 +121,7 @@ def run_prophet_forecast(df, steps):
 
     # Identifichiamo i dati reali
     df_output['is_real'] = pd.notnull(df_output['y'])
-    df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
+    #df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
 
     # # Creiamo i limiti che diventano nulli per i dati reali
     # df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
@@ -130,8 +130,8 @@ def run_prophet_forecast(df, steps):
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
-        'Dato_Finale': (df_output['Valore_Combinato'] / divisor).clip(lower=0).round(2),
-        'Dato reale': (pd.to_numeric(df['y'], errors='coerce') / divisor).round(2),
+        'Previsione': (pd.to_numeric(df_output['yhat']/ divisor).clip(lower=0).round(2),
+        'Dato_reale': (pd.to_numeric(df['y'], errors='coerce') / divisor).round(2),
         'CI_Superiore': (pd.to_numeric(df_output['yhat_upper'], errors='coerce') / divisor).round(2),
         'CI_Inferiore': (pd.to_numeric(df_output['yhat_lower'], errors='coerce') / divisor).round(2)
     })
