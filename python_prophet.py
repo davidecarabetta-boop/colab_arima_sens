@@ -118,7 +118,7 @@ def get_complete_gift_holidays():
             'holiday': 'regali_natale',
             'ds': f'{year}-12-18',
             'lower_window': -15, 'upper_window': 0,
-            'prior_scale': 8
+            'prior_scale': 14
         })
 
         # 2. SAN VALENTINO (Picco il 14 Feb, acquisti nei 7 giorni prima)
@@ -126,7 +126,7 @@ def get_complete_gift_holidays():
             'holiday': 'san_valentino',
             'ds': f'{year}-02-14',
             'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 4
+            'prior_scale': 6
         })
 
         # 3. FESTA DELLA MAMMA (Seconda domenica di Maggio)
@@ -137,7 +137,7 @@ def get_complete_gift_holidays():
             'holiday': 'festa_mamma',
             'ds': mamma_date,
             'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 2
+            'prior_scale': 4
         })
 
         # 4. BLACK FRIDAY (Quarto venerdì di Novembre)
@@ -148,7 +148,7 @@ def get_complete_gift_holidays():
             'ds': black_friday,
             'lower_window': -7, # Inizia il lunedì della stessa settimana
             'upper_window': 3,
-            'prior_scale': 3
+            'prior_scale': 6
         })
 
     return pd.DataFrame(holidays_list)
