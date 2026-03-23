@@ -96,8 +96,6 @@ def load_and_clean_data(client):
     
     # Filtro Outlier (es. valori negativi o errori macroscopici nel database)
     df = df[df['y'] >= 0]
-
-    df['ds'] = pd.to_datetime(df['ds']) + pd.to_timedelta(1, unit='d')
     
     return df
 
@@ -133,7 +131,8 @@ def run_prophet_forecast(df, steps):
     # # Creiamo i limiti che diventano nulli per i dati reali
     # df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
     # df_output['lower_final'] = np.where(df_output['is_real'], None, df_output['yhat_lower'])
-    
+    df['ds'] = pd.to_datetime(df['ds']) + pd.to_timedelta(1, unit='d')
+
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
