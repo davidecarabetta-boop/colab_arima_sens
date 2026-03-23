@@ -101,22 +101,27 @@ def load_and_clean_data(client):
 
 def run_prophet_forecast(df, steps):
     print("Inizio Addestramento Prophet...")
-    
+
+    df['is_february_limit'] = 0
+    df.loc[(df['ds'] >= '2026-02-01') & (df['ds'] <= '2026-02-28'), 'is_february_limit'] = 1
+
     model = Prophet(
         yearly_seasonality=False,
         weekly_seasonality=True,
         daily_seasonality=True,
         changepoint_prior_scale=0.012
     )
+    model.add_regressor('is_february_limit')
     model.add_seasonality(name='monthly', period=30.5, fourier_order=6)
     model.add_country_holidays(country_name='IT')
     model.fit(df)
 
     future = model.make_future_dataframe(periods=steps)
+    future['is_february_limit'] = 0
     forecast = model.predict(future)
 
     divisor = 100
-    df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
+    df_output = forecast[['ds', 'is_february_limit', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
     df_output = df_output.merge(df[['ds', 'y']], on='ds', how='left')
 
     # Identifichiamo i dati reali
