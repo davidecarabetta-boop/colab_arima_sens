@@ -113,7 +113,7 @@ def get_complete_gift_holidays():
     holidays_list = []
     
     for year in years:
-        # 1. NATALE (Picco il 18 Dic, influenza dall'Immacolata)
+        # 1. NATALE 
         holidays_list.append({
             'holiday': 'regali_natale',
             'ds': f'{year}-12-18',
@@ -129,7 +129,7 @@ def get_complete_gift_holidays():
             'prior_scale': 18
         })
         
-        # 2. SAN VALENTINO (Picco il 14 Feb, acquisti nei 7 giorni prima)
+        # 2. SAN VALENTINO 
         holidays_list.append({
             'holiday': 'san_valentino',
             'ds': f'{year}-02-14',
@@ -137,10 +137,9 @@ def get_complete_gift_holidays():
             'prior_scale': 6
         })
 
-        # 3. FESTA DELLA MAMMA (Seconda domenica di Maggio)
-        # Calcoliamo la data esatta
+        # 3. FESTA DELLA MAMMA 
         may_days = pd.date_range(start=f'{year}-05-01', end=f'{year}-05-14')
-        mamma_date = may_days[may_days.weekday == 6][1] # Seconda domenica
+        mamma_date = may_days[may_days.weekday == 6][1] 
         holidays_list.append({
             'holiday': 'festa_mamma',
             'ds': mamma_date,
@@ -154,7 +153,7 @@ def get_complete_gift_holidays():
         holidays_list.append({
             'holiday': 'black_friday_week',
             'ds': black_friday,
-            'lower_window': -4, # Inizia il lunedì della stessa settimana
+            'lower_window': -4, 
             'upper_window': 3,
             'prior_scale': 15
         })
@@ -191,11 +190,6 @@ def run_prophet_forecast(df, steps):
 
     # Identifichiamo i dati reali
     df_output['is_real'] = pd.notnull(df_output['y'])
-    #df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
-
-    # # Creiamo i limiti che diventano nulli per i dati reali
-    # df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
-    # df_output['lower_final'] = np.where(df_output['is_real'], None, df_output['yhat_lower'])
 
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
