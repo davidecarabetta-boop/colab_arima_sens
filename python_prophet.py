@@ -131,8 +131,8 @@ def run_prophet_forecast(df, steps):
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Dato_Finale': (df_output['Valore_Combinato'] / divisor).clip(lower=0).round(2),
-        'CI_Superiore': (pd.to_numeric(df_output['upper_final'], errors='coerce') / divisor).round(2),
-        'CI_Inferiore': (pd.to_numeric(df_output['lower_final'], errors='coerce') / divisor).round(2)
+        'CI_Superiore': (pd.to_numeric(df_output['yhat_upper'], errors='coerce') / divisor).round(2),
+        'CI_Inferiore': (pd.to_numeric(df_output['yhat_lower'], errors='coerce') / divisor).round(2)
     })
     
     final_df = final_df.replace([np.inf, -np.inf], np.nan).fillna("")
