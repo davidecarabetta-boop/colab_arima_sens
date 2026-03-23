@@ -84,8 +84,8 @@ def load_and_clean_data(client):
 
     # Pulizia Date
     df['ds'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce') 
-    df["date"] = df["date"] + pd.Timedelta(days=1)
-    df = df.dropna(subset=['ds']) 
+    df = df.dropna(subset=['ds']) # Rimuovi errori prima della somma
+    df['ds'] = df['ds'] + pd.to_timedelta(1, unit='D')        
 
     # Pulizia Valuta
     df['y'] = df['Entrate totali'].astype(str).str.replace('€', '').str.replace('.', '', regex=False)
