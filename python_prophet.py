@@ -80,11 +80,12 @@ def authenticate_google_sheets():
 
 def load_and_clean_data(client):
     sheet = client.open_by_url(SHEET_URL).worksheet(INPUT_SHEET_NAME)
-    df = pd.DataFrame(sheet.get_all_records())
+    df = pd.DataFrame(sheet.get_all_records()).copy()
 
     # Pulizia Date
-    df['ds'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce') + pd.Timedelta(days=1)
-    df = df.dropna(subset=['ds'])
+    df['ds'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce') 
+    df["date"] = df["date"] + pd.Timedelta(days=1)
+    df = df.dropna(subset=['ds']) 
 
     # Pulizia Valuta
     df['y'] = df['Entrate totali'].astype(str).str.replace('€', '').str.replace('.', '', regex=False)
