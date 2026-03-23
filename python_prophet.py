@@ -117,7 +117,7 @@ def get_complete_gift_holidays():
         'holiday': 'Ottobre-sconti',
         'ds': '2026-10-31',
         'lower_window': -2, 'upper_window': 0,
-        'prior_scale': 10
+        'prior_scale': 14
     })
 
     for year in years:
@@ -142,7 +142,7 @@ def get_complete_gift_holidays():
             'holiday': 'san_valentino',
             'ds': f'{year}-02-14',
             'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 6
+            'prior_scale': 4
         })
 
         # 3. FESTA DELLA MAMMA (Seconda domenica di Maggio)
@@ -153,7 +153,7 @@ def get_complete_gift_holidays():
             'holiday': 'festa_mamma',
             'ds': mamma_date,
             'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 4
+            'prior_scale': 2
         })
 
         # 4. BLACK FRIDAY (Quarto venerdì di Novembre)
