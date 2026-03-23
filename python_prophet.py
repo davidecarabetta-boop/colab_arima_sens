@@ -92,7 +92,7 @@ def load_and_clean_data(client):
     df['ds'] = np.where(
         df['ds'] > soglia, 
         df['ds'] + pd.Timedelta(days=1), 
-        df['ds']
+        df['ds'] - pd.Timedelta(days=1)
     )
 
     # Pulizia Valuta
