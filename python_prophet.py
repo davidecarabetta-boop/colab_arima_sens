@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 SERVICE_ACCOUNT_FILE = 'credentials.json'
 SHEET_URL = 'https://docs.google.com/spreadsheets/d/1rSeZ1BtU3ipbFfnTeeXFKMRsH5r2yjprSTsFUmN7aVs/edit?gid=1633708881#gid=1633708881'
 INPUT_SHEET_NAME = 'sensation_dati_storici_arima'
-OUTPUT_SHEET_NAME = 'Previsione_Output_SARIMAX'
+OUTPUT_SHEET_NAME = 'Previsione_Output_Prophet_w'
 
 FORECAST_STEPS = 30
 RETRAIN_START_DATE = '2025-09-01'
@@ -123,9 +123,9 @@ def run_prophet_forecast(df, steps):
     df_output['is_real'] = pd.notnull(df_output['y'])
     df_output['Valore_Combinato'] = df_output['y'].fillna(df_output['yhat'])
 
-    # Creiamo i limiti che diventano nulli per i dati reali
-    df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
-    df_output['lower_final'] = np.where(df_output['is_real'], None, df_output['yhat_lower'])
+    # # Creiamo i limiti che diventano nulli per i dati reali
+    # df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
+    # df_output['lower_final'] = np.where(df_output['is_real'], None, df_output['yhat_lower'])
     
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
