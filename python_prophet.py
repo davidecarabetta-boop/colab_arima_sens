@@ -111,15 +111,7 @@ def load_and_clean_data(client):
 def get_complete_gift_holidays():
     years = [2024, 2025, 2026]
     holidays_list = []
-
-    # 1. Sconti 31 ottobre
-    holidays_list.append({
-        'holiday': 'Ottobre-sconti',
-        'ds': '2026-10-31',
-        'lower_window': -5, 'upper_window': 0,
-        'prior_scale': 22
-    })
-
+    
     for year in years:
         # 1. NATALE (Picco il 18 Dic, influenza dall'Immacolata)
         holidays_list.append({
@@ -134,7 +126,7 @@ def get_complete_gift_holidays():
             'holiday': 'san_lorenzo',
             'ds': f'{year}-08-11',
             'lower_window': -5, 'upper_window': 0,
-            'prior_scale': 20
+            'prior_scale': 18
         })
         
         # 2. SAN VALENTINO (Picco il 14 Feb, acquisti nei 7 giorni prima)
