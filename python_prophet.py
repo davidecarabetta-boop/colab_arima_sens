@@ -148,7 +148,7 @@ def get_complete_gift_holidays():
             'ds': black_friday,
             'lower_window': -7, # Inizia il lunedì della stessa settimana
             'upper_window': 3,
-            'prior_scale': 6
+            'prior_scale': 9
         })
 
     return pd.DataFrame(holidays_list)
