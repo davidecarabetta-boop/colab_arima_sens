@@ -96,13 +96,13 @@ def load_and_clean_data(client):
     
     # Filtro Outlier (es. valori negativi o errori macroscopici nel database)
     df = df[df['y'] >= 0]
+
+    df['ds'] = pd.to_datetime(df['ds']) + pd.to_timedelta(1, unit='d')
     
     return df
 
 def run_prophet_forecast(df, steps):
     print("Inizio Addestramento Prophet...")
-    # Aggiunge esattamente 1 giorno a tutta la colonna delle date
-    df['ds'] = pd.to_datetime(df['ds']) + pd.to_timedelta(1, unit='d')
 
     df['is_february_limit'] = 0
     df.loc[(df['ds'] >= '2026-02-01') & (df['ds'] <= '2026-02-28'), 'is_february_limit'] = 1
