@@ -112,6 +112,14 @@ def get_complete_gift_holidays():
     years = [2024, 2025, 2026]
     holidays_list = []
 
+    # 1. Sconti 31 ottobre
+    holidays_list.append({
+        'holiday': 'regali_natale',
+        'ds': '2026-10-31',
+        'lower_window': -2, 'upper_window': 0,
+        'prior_scale': 10
+    })
+
     for year in years:
         # 1. NATALE (Picco il 18 Dic, influenza dall'Immacolata)
         holidays_list.append({
@@ -120,7 +128,14 @@ def get_complete_gift_holidays():
             'lower_window': -20, 'upper_window': 0,
             'prior_scale': 14
         })
-
+        # 11 AGOSTO
+        holidays_list.append({
+            'holiday': 'regali_natale',
+            'ds': f'{year}-08-11',
+            'lower_window': -2, 'upper_window': 0,
+            'prior_scale': 10
+        })
+        
         # 2. SAN VALENTINO (Picco il 14 Feb, acquisti nei 7 giorni prima)
         holidays_list.append({
             'holiday': 'san_valentino',
