@@ -130,10 +130,10 @@ def run_prophet_forecast(df, steps):
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
-        'Previsione': (pd.to_numeric(df_output['yhat']/ divisor).clip(lower=0).round(2),
-        'Dato_reale': (pd.to_numeric(df['y'], errors='coerce') / divisor).round(2),
-        'CI_Superiore': (pd.to_numeric(df_output['yhat_upper'], errors='coerce') / divisor).round(2),
-        'CI_Inferiore': (pd.to_numeric(df_output['yhat_lower'], errors='coerce') / divisor).round(2)
+        'Previsione': pd.to_numeric(df_output['yhat'] / divisor).round(2),
+        'Dato_reale': pd.to_numeric(df_output['y'] / divisor, errors='coerce').round(2),
+        'CI_Superiore': pd.to_numeric(df_output['yhat_upper'] / divisor, errors='coerce').round(2),
+        'CI_Inferiore': pd.to_numeric(df_output['yhat_lower'] / divisor, errors='coerce').round(2)
     })
     
     final_df = final_df.replace([np.inf, -np.inf], np.nan).fillna("")
