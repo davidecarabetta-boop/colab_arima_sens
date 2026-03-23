@@ -83,7 +83,7 @@ def load_and_clean_data(client):
     df = pd.DataFrame(sheet.get_all_records())
 
     # Pulizia Date
-    df['ds'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce')
+    df['ds'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce') - pd.Timedelta(days=1)
     df = df.dropna(subset=['ds'])
 
     # Pulizia Valuta
@@ -91,7 +91,6 @@ def load_and_clean_data(client):
     df['y'] = pd.to_numeric(df['y'].str.replace(',', '.', regex=False), errors='coerce')
     df = df.dropna(subset=['y'])
 
-    df['ds'] = pd.to_datetime(df['ds']) + pd.to_timedelta(1, unit='d')
     # Aggregazione duplicati (fondamentale per Prophet)
     df = df.groupby('ds')['y'].sum().reset_index()
     
@@ -132,7 +131,6 @@ def run_prophet_forecast(df, steps):
     # # Creiamo i limiti che diventano nulli per i dati reali
     # df_output['upper_final'] = np.where(df_output['is_real'], None, df_output['yhat_upper'])
     # df_output['lower_final'] = np.where(df_output['is_real'], None, df_output['yhat_lower'])
-    df['ds'] = pd.to_datetime(df['ds']) + pd.to_timedelta(1, unit='d')
 
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
