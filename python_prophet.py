@@ -116,7 +116,7 @@ def get_complete_gift_holidays():
     holidays_list.append({
         'holiday': 'Ottobre-sconti',
         'ds': '2026-10-31',
-        'lower_window': -2, 'upper_window': 0,
+        'lower_window': -7, 'upper_window': 0,
         'prior_scale': 14
     })
 
@@ -133,7 +133,7 @@ def get_complete_gift_holidays():
         holidays_list.append({
             'holiday': 'san_lorenzo',
             'ds': f'{year}-08-11',
-            'lower_window': -2, 'upper_window': 0,
+            'lower_window': -7, 'upper_window': 0,
             'prior_scale': 10
         })
         
