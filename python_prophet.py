@@ -23,7 +23,7 @@ OUTPUT_SHEET_NAME = 'Previsione_Output_Prophet_w'
 
 FORECAST_STEPS = 30
 RETRAIN_START_DATE = '2025-09-01'
-OUTLIER_DATE = pd.to_datetime('2026-03-18')
+OUTLIER_DATE = pd.to_datetime('2026-03-20')
 ORDER = (1, 0, 1)
 SEASONAL_ORDER = (1, 0, 0, 7)
 
@@ -101,6 +101,8 @@ def load_and_clean_data(client):
 
 def run_prophet_forecast(df, steps):
     print("Inizio Addestramento Prophet...")
+    # Aggiunge esattamente 1 giorno a tutta la colonna delle date
+    df['ds'] = pd.to_datetime(df['ds']) + pd.to_timedelta(1, unit='d')
 
     df['is_february_limit'] = 0
     df.loc[(df['ds'] >= '2026-02-01') & (df['ds'] <= '2026-02-28'), 'is_february_limit'] = 1
