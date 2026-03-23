@@ -117,7 +117,7 @@ def get_complete_gift_holidays():
         holidays_list.append({
             'holiday': 'regali_natale',
             'ds': f'{year}-12-18',
-            'lower_window': -15, 'upper_window': 0,
+            'lower_window': -20, 'upper_window': 0,
             'prior_scale': 14
         })
 
@@ -146,7 +146,7 @@ def get_complete_gift_holidays():
         holidays_list.append({
             'holiday': 'black_friday_week',
             'ds': black_friday,
-            'lower_window': -7, # Inizia il lunedì della stessa settimana
+            'lower_window': -4, # Inizia il lunedì della stessa settimana
             'upper_window': 3,
             'prior_scale': 9
         })
