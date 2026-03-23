@@ -114,7 +114,7 @@ def get_complete_gift_holidays():
 
     # 1. Sconti 31 ottobre
     holidays_list.append({
-        'holiday': 'regali_natale',
+        'holiday': 'Ottobre-sconti',
         'ds': '2026-10-31',
         'lower_window': -2, 'upper_window': 0,
         'prior_scale': 10
@@ -128,9 +128,10 @@ def get_complete_gift_holidays():
             'lower_window': -20, 'upper_window': 0,
             'prior_scale': 14
         })
-        # 11 AGOSTO
+        
+        # 11 AGOSTO San Lorenzo
         holidays_list.append({
-            'holiday': 'regali_natale',
+            'holiday': 'san_lorenzo',
             'ds': f'{year}-08-11',
             'lower_window': -2, 'upper_window': 0,
             'prior_scale': 10
