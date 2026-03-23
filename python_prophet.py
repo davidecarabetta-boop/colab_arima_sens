@@ -84,8 +84,16 @@ def load_and_clean_data(client):
 
     # Pulizia Date
     df['ds'] = pd.to_datetime(df['Data'], dayfirst=True, errors='coerce') 
-    df = df.dropna(subset=['ds']) # Rimuovi errori prima della somma
-    df['ds'] = df['ds'] + pd.to_timedelta(1, unit='D')        
+    df = df.dropna(subset=['ds']) 
+    soglia = pd.Timestamp('2025-11-20')
+
+    # 3. Aggiungi 1 giorno SOLO se la data è maggiore del 20/11/2025
+    # Se la condizione è vera aggiunge 1 giorno, altrimenti lascia la data originale
+    df['ds'] = np.where(
+        df['ds'] > soglia, 
+        df['ds'] + pd.Timedelta(days=1), 
+        df['ds']
+    )
 
     # Pulizia Valuta
     df['y'] = df['Entrate totali'].astype(str).str.replace('€', '').str.replace('.', '', regex=False)
