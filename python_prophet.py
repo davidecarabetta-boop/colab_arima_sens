@@ -108,13 +108,57 @@ def load_and_clean_data(client):
 
     return df
 
+def get_complete_gift_holidays():
+    years = [2024, 2025, 2026]
+    holidays_list = []
+
+    for year in years:
+        # 1. NATALE (Picco il 18 Dic, influenza dall'Immacolata)
+        holidays_list.append({
+            'holiday': 'regali_natale',
+            'ds': f'{year}-12-18',
+            'lower_window': -10, 'upper_window': 0
+        })
+
+        # 2. SAN VALENTINO (Picco il 14 Feb, acquisti nei 7 giorni prima)
+        holidays_list.append({
+            'holiday': 'san_valentino',
+            'ds': f'{year}-02-14',
+            'lower_window': -7, 'upper_window': 0
+        })
+
+        # 3. FESTA DELLA MAMMA (Seconda domenica di Maggio)
+        # Calcoliamo la data esatta
+        may_days = pd.date_range(start=f'{year}-05-01', end=f'{year}-05-14')
+        mamma_date = may_days[may_days.weekday == 6][1] # Seconda domenica
+        holidays_list.append({
+            'holiday': 'festa_mamma',
+            'ds': mamma_date,
+            'lower_window': -7, 'upper_window': 0
+        })
+
+        # 4. BLACK FRIDAY (Quarto venerdì di Novembre)
+        nov_days = pd.date_range(start=f'{year}-11-01', end=f'{year}-11-30')
+        black_friday = nov_days[nov_days.weekday == 4][3]
+        holidays_list.append({
+            'holiday': 'black_friday_week',
+            'ds': black_friday,
+            'lower_window': -4, # Inizia il lunedì della stessa settimana
+            'upper_window': 3   # Include il Cyber Monday
+        })
+
+    return pd.DataFrame(holidays_list)
+    
 def run_prophet_forecast(df, steps):
     print("Inizio Addestramento Prophet...")
 
+    gift_holidays = get_complete_gift_holidays()
+    
     df['is_february_limit'] = 0
     df.loc[(df['ds'] >= '2026-02-01') & (df['ds'] <= '2026-02-28'), 'is_february_limit'] = 1
 
     model = Prophet(
+        holidays= gift_holidays,
         yearly_seasonality=False,
         weekly_seasonality=True,
         daily_seasonality=True,
