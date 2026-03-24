@@ -170,7 +170,7 @@ def run_prophet_forecast(df, steps):
 
     model = Prophet(
         holidays= gift_holidays,
-        yearly_seasonality=False,
+        yearly_seasonality=True,
         weekly_seasonality=True,
         daily_seasonality=True,
         changepoint_prior_scale=0.012
