@@ -21,7 +21,7 @@ SHEET_URL = 'https://docs.google.com/spreadsheets/d/1rSeZ1BtU3ipbFfnTeeXFKMRsH5r
 INPUT_SHEET_NAME = 'sensation_dati_storici_arima'
 OUTPUT_SHEET_NAME = 'Previsione_Output_Prophet_w'
 
-FORECAST_STEPS = 30
+FORECAST_STEPS = 90
 RETRAIN_START_DATE = '2025-09-01'
 OUTLIER_DATE = pd.to_datetime('2026-03-20')
 ORDER = (1, 0, 1)
