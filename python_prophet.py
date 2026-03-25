@@ -169,10 +169,10 @@ def run_prophet_forecast(df, steps):
     gift_holidays = get_complete_gift_holidays()
 
     model = Prophet(
-        holidays= gift_holidays,
+        holidays=gift_holidays,
         yearly_seasonality=True,
         weekly_seasonality=True,
-        daily_seasonality=True,
+        daily_seasonality=False, 
         changepoint_prior_scale=0.05,
         interval_width=0.8,
         seasonality_mode='multiplicative'
@@ -185,43 +185,69 @@ def run_prophet_forecast(df, steps):
     forecast = model.predict(future)
 
     divisor = 100
-    df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
+    
+    # --- CALCOLO COMPONENTI (Valore Assoluto) ---
+    # Moltiplichiamo il coefficiente stagionale per il trend per ottenere il valore in valuta
+    forecast['trend_val'] = forecast['trend'] / divisor
+    forecast['impact_yearly'] = (forecast['yearly'] * forecast['trend']) / divisor
+    forecast['impact_weekly'] = (forecast['weekly'] * forecast['trend']) / divisor
+    forecast['impact_monthly'] = (forecast['monthly'] * forecast['trend']) / divisor
+    forecast['impact_holidays'] = (forecast['holidays'] * forecast['trend']) / divisor
+
+    # --- LOGICA DI OUTPUT ---
+    df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'trend_val', 
+                          'impact_yearly', 'impact_weekly', 'impact_monthly', 'impact_holidays']].copy()
     df_output = df_output.merge(df[['ds', 'y']], on='ds', how='left')
     df_output['week'] = df_output['ds'].dt.to_period('W').apply(lambda r: r.start_time)
 
-    # 3. Calculate the weekly total
-    df_output['weekly_yhat_total'] = df_output.groupby('week')['yhat'].transform('sum')
-    
+    # Aggregazione settimanale (Sommiamo gli impatti giornalieri per avere il totale settimanale)
     df_weekly = df_output.groupby('week').agg({
         'yhat': 'sum',
         'yhat_lower': 'sum',
         'yhat_upper': 'sum',
-        'y': 'sum' 
+        'y': 'sum',
+        'trend_val': 'sum',
+        'impact_yearly': 'sum',
+        'impact_weekly': 'sum',
+        'impact_monthly': 'sum',
+        'impact_holidays': 'sum'
     }).reset_index()
 
-    # Identifichiamo i dati reali
     df_output['is_real'] = pd.notnull(df_output['y'])
     df_weekly['is_real'] = (pd.notnull(df_weekly['y'])) & (df_weekly['y'] > 0)
     df_weekly.loc[~df_weekly['is_real'], 'y'] = np.nan
 
+    # --- CREAZIONE FINAL_DF (Giornaliero) ---
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Previsione': pd.to_numeric(df_output['yhat'] / divisor).round(2),
         'Dato_reale': pd.to_numeric(df_output['y'] / divisor, errors='coerce').round(2),
-        'CI_Superiore': pd.to_numeric(df_output['yhat_upper'] / divisor, errors='coerce').round(2),
-        'CI_Inferiore': pd.to_numeric(df_output['yhat_lower'] / divisor, errors='coerce').round(2)
+        'CI_Superiore': pd.to_numeric(df_output['yhat_upper'] / divisor).round(2),
+        'CI_Inferiore': pd.to_numeric(df_output['yhat_lower'] / divisor).round(2),
+        'Trend_Base': df_output['trend_val'].round(2),
+        'Effetto_Annuale': df_output['impact_yearly'].round(2),
+        'Effetto_Settimanale': df_output['impact_weekly'].round(2),
+        'Effetto_Mensile': df_output['impact_monthly'].round(2),
+        'Effetto_Festivita': df_output['impact_holidays'].round(2)
     })
 
+    # --- CREAZIONE FINAL_DF_WEEKLY (Settimanale) ---
     final_df_weekly = pd.DataFrame({
         'Data': df_weekly['week'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_weekly['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Previsione': pd.to_numeric(df_weekly['yhat'] / divisor).round(2),
         'Dato_reale': pd.to_numeric(df_weekly['y'] / divisor, errors='coerce').round(2),
-        'CI_Superiore': pd.to_numeric(df_weekly['yhat_upper'] / divisor, errors='coerce').round(2),
-        'CI_Inferiore': pd.to_numeric(df_weekly['yhat_lower'] / divisor, errors='coerce').round(2)
+        'CI_Superiore': pd.to_numeric(df_weekly['yhat_upper'] / divisor).round(2),
+        'CI_Inferiore': pd.to_numeric(df_weekly['yhat_lower'] / divisor).round(2),
+        'Trend_Base': df_weekly['trend_val'].round(2),
+        'Effetto_Annuale': df_weekly['impact_yearly'].round(2),
+        'Effetto_Settimanale': df_weekly['impact_weekly'].round(2),
+        'Effetto_Mensile': df_weekly['impact_monthly'].round(2),
+        'Effetto_Festivita': df_weekly['impact_holidays'].round(2)
     })
     
+    # Pulizia finale (NaN -> "")
     final_df = final_df.replace([np.inf, -np.inf], np.nan).fillna("")
     final_df_weekly = final_df_weekly.replace([np.inf, -np.inf], np.nan).fillna("")
 
