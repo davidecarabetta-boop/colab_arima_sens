@@ -175,7 +175,7 @@ def run_prophet_forecast(df, steps):
         weekly_seasonality=True,
         daily_seasonality=True,
         changepoint_prior_scale=0.04,
-        interval_width=0.95,
+        interval_width=0.9,
         seasonality_mode='multiplicative'
     )
     model.add_seasonality(name='monthly', period=30.5, fourier_order=5)
