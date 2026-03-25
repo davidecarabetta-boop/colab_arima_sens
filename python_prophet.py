@@ -175,7 +175,7 @@ def run_prophet_forecast(df, steps):
         daily_seasonality=False, 
         changepoint_prior_scale=0.05,
         interval_width=0.8,
-        seasonality_mode='multiplicative'
+        seasonality_mode='additive'
     )
     model.add_seasonality(name='monthly', period=30.5, fourier_order=5)
     model.add_country_holidays(country_name='IT')
