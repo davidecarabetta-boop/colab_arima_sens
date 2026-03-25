@@ -250,11 +250,13 @@ def push_to_google_sheets(client, df_forecast, df_forecast_week):
     
     try:
         worksheet = sheet.worksheet(OUTPUT_SHEET_NAME)
-        worksheet_week = sheet.worksheet(OUTPUT_SHEET_NAME_WEEK)
     except gspread.WorksheetNotFound:
         worksheet = sheet.add_worksheet(title=OUTPUT_SHEET_NAME, rows=1000, cols=10)
-        worksheet_week = sheet.add_worksheet(title=OUTPUT_SHEET_NAME_WEEK, rows=1000, cols=10)
 
+    try:
+        worksheet_week = sheet.worksheet(OUTPUT_SHEET_NAME_WEEK)
+    except gspread.WorksheetNotFound:
+        worksheet_week = sheet.add_worksheet(title=OUTPUT_SHEET_NAME_WEEK, rows=1000, cols=10)
 
     data_to_write = [df_forecast.columns.values.tolist()] + df_forecast.values.tolist()
     data_to_write_week = [df_forecast_week.columns.values.tolist()] + df_forecast_week.values.tolist()
