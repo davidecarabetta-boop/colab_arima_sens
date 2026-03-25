@@ -202,7 +202,7 @@ def run_prophet_forecast(df, steps):
     df_weekly['is_real'] = pd.notnull(df_weekly['y'])
 
     final_df = pd.DataFrame({
-        'Data': df_output['week'].dt.strftime('%G%V'),
+        'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Previsione': pd.to_numeric(df_output['yhat'] / divisor).round(2),
         'Dato_reale': pd.to_numeric(df_output['y'] / divisor, errors='coerce').round(2),
@@ -211,7 +211,7 @@ def run_prophet_forecast(df, steps):
     })
 
     final_df_weekly = pd.DataFrame({
-        'Data': df_weekly['ds'].dt.strftime('%Y-%m-%d'),
+        'Data': df_weekly['week'].dt.strftime('%G%V'),
         'Tipo': df_weekly['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Previsione': pd.to_numeric(df_weekly['yhat'] / divisor).round(2),
         'Dato_reale': pd.to_numeric(df_weekly['y'] / divisor, errors='coerce').round(2),
@@ -221,7 +221,7 @@ def run_prophet_forecast(df, steps):
     
     final_df = final_df.replace([np.inf, -np.inf], np.nan).fillna("")
     final_df_weekly = final_df_weekly.replace([np.inf, -np.inf], np.nan).fillna("")
-    
+
     return final_df, final_df_weekly
 
 # def run_sarimax_forecast(endog_series, steps):
