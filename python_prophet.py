@@ -20,6 +20,8 @@ SERVICE_ACCOUNT_FILE = 'credentials.json'
 SHEET_URL = 'https://docs.google.com/spreadsheets/d/1rSeZ1BtU3ipbFfnTeeXFKMRsH5r2yjprSTsFUmN7aVs/edit?gid=1633708881#gid=1633708881'
 INPUT_SHEET_NAME = 'sensation_dati_storici_arima'
 OUTPUT_SHEET_NAME = 'Previsione_Output_Prophet_w'
+OUTPUT_SHEET_NAME_WEEk = 'Previsione_Output_Prophet_week'
+
 
 FORECAST_STEPS = 365
 RETRAIN_START_DATE = '2025-09-01'
@@ -197,21 +199,30 @@ def run_prophet_forecast(df, steps):
 
     # Identifichiamo i dati reali
     df_output['is_real'] = pd.notnull(df_output['y'])
+    df_weekly['is_real'] = pd.notnull(df_weekly['y'])
 
     final_df = pd.DataFrame({
-        'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
-        'Settimana_ISO': df_output['ds'].dt.strftime('%G%V'),
+        'Data': df_output['week'].dt.strftime('%G%V'),
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Previsione': pd.to_numeric(df_output['yhat'] / divisor).round(2),
-        'Previsione settimanale': pd.to_numeric(df_output['weekly_yhat_total'] / divisor).round(2),
         'Dato_reale': pd.to_numeric(df_output['y'] / divisor, errors='coerce').round(2),
         'CI_Superiore': pd.to_numeric(df_output['yhat_upper'] / divisor, errors='coerce').round(2),
         'CI_Inferiore': pd.to_numeric(df_output['yhat_lower'] / divisor, errors='coerce').round(2)
     })
+
+    final_df_weekly = pd.DataFrame({
+        'Data': df_weekly['ds'].dt.strftime('%Y-%m-%d'),
+        'Tipo': df_weekly['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
+        'Previsione': pd.to_numeric(df_weekly['yhat'] / divisor).round(2),
+        'Dato_reale': pd.to_numeric(df_weekly['y'] / divisor, errors='coerce').round(2),
+        'CI_Superiore': pd.to_numeric(df_weekly['yhat_upper'] / divisor, errors='coerce').round(2),
+        'CI_Inferiore': pd.to_numeric(df_weekly['yhat_lower'] / divisor, errors='coerce').round(2)
+    })
     
     final_df = final_df.replace([np.inf, -np.inf], np.nan).fillna("")
+    final_df_weekly = final_df_weekly.replace([np.inf, -np.inf], np.nan).fillna("")
     
-    return final_df
+    return final_df, final_df_weekly
 
 # def run_sarimax_forecast(endog_series, steps):
 #     print("Fase 2: Addestramento Modello...")
@@ -231,17 +242,27 @@ def run_prophet_forecast(df, steps):
 #     })
 #     return forecast_df
 
-def push_to_google_sheets(client, df_forecast):
+def push_to_google_sheets(client, df_forecast, df_forecast_week):
     print(f"Fase 3: Salvataggio su {OUTPUT_SHEET_NAME}...")
+    print(f"Fase 3: Salvataggio settimanale su {OUTPUT_SHEET_NAME_WEEK}...")
+    
     sheet = client.open_by_url(SHEET_URL)
+    
     try:
         worksheet = sheet.worksheet(OUTPUT_SHEET_NAME)
+        worksheet_week = sheet.worksheet(OUTPUT_SHEET_NAME_WEEK)
     except gspread.WorksheetNotFound:
         worksheet = sheet.add_worksheet(title=OUTPUT_SHEET_NAME, rows=1000, cols=10)
+        worksheet_week = sheet.add_worksheet(title=OUTPUT_SHEET_NAME_WEEK, rows=1000, cols=10)
+
 
     data_to_write = [df_forecast.columns.values.tolist()] + df_forecast.values.tolist()
+    data_to_write_week = [df_forecast_week.columns.values.tolist()] + df_forecast_week.values.tolist()
+
     worksheet.clear()
     worksheet.update('A1', data_to_write)
+    worksheet_week.clear()
+    worksheet_week.update('A1', data_to_write_week)
     print("Update completato.")
 
 # if __name__ == '__main__':
@@ -260,8 +281,8 @@ if __name__ == '__main__':
     try:
         client = authenticate_google_sheets()
         clean_df = load_and_clean_data(client)
-        forecast_df = run_prophet_forecast(clean_df, FORECAST_STEPS)
-        push_to_google_sheets(client, forecast_df)
+        forecast_df, forecast_df_week = run_prophet_forecast(clean_df, FORECAST_STEPS)
+        push_to_google_sheets(client, forecast_df, forecast_df_week)
     except Exception as e:
         print(f"ERRORE: {e}")
         sys.exit(1)
