@@ -183,6 +183,17 @@ def run_prophet_forecast(df, steps):
     divisor = 100
     df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
     df_output = df_output.merge(df[['ds', 'y']], on='ds', how='left')
+    df_output['week'] = df_output['ds'].dt.to_period('W').apply(lambda r: r.start_time)
+
+    # 3. Calculate the weekly total
+    df_output['weekly_yhat_total'] = df_output.groupby('week')['yhat'].transform('sum')
+    
+    df_weekly = df_output.groupby('week').agg({
+        'yhat': 'sum',
+        'yhat_lower': 'sum',
+        'yhat_upper': 'sum',
+        'y': 'sum' 
+    }).reset_index()
 
     # Identifichiamo i dati reali
     df_output['is_real'] = pd.notnull(df_output['y'])
@@ -192,6 +203,7 @@ def run_prophet_forecast(df, steps):
         'Settimana_ISO': df_output['ds'].dt.strftime('%G%V'),
         'Tipo': df_output['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Previsione': pd.to_numeric(df_output['yhat'] / divisor).round(2),
+        'Previsione settimanale': pd.to_numeric(df_output['weekly_yhat_total'] / divisor).round(2),
         'Dato_reale': pd.to_numeric(df_output['y'] / divisor, errors='coerce').round(2),
         'CI_Superiore': pd.to_numeric(df_output['yhat_upper'] / divisor, errors='coerce').round(2),
         'CI_Inferiore': pd.to_numeric(df_output['yhat_lower'] / divisor, errors='coerce').round(2)
