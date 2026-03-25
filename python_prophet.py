@@ -20,7 +20,7 @@ SERVICE_ACCOUNT_FILE = 'credentials.json'
 SHEET_URL = 'https://docs.google.com/spreadsheets/d/1rSeZ1BtU3ipbFfnTeeXFKMRsH5r2yjprSTsFUmN7aVs/edit?gid=1633708881#gid=1633708881'
 INPUT_SHEET_NAME = 'sensation_dati_storici_arima'
 OUTPUT_SHEET_NAME = 'Previsione_Output_Prophet_w'
-OUTPUT_SHEET_NAME_WEEk = 'Previsione_Output_Prophet_week'
+OUTPUT_SHEET_NAME_WEEK = 'Previsione_Output_Prophet_week'
 
 
 FORECAST_STEPS = 365
