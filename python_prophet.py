@@ -97,7 +97,6 @@ def load_and_clean_data(client):
         df['ds']
     )
 
-    
     # Pulizia Valuta
     df['y'] = df['Entrate totali'].astype(str).str.replace('€', '').str.replace('.', '', regex=False)
     df['y'] = pd.to_numeric(df['y'].str.replace(',', '.', regex=False), errors='coerce')    
@@ -138,7 +137,7 @@ def get_complete_gift_holidays():
             'holiday': 'san_valentino',
             'ds': f'{year}-02-14',
             'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 6
+            'prior_scale': 12
         })
 
         # 3. FESTA DELLA MAMMA 
@@ -174,8 +173,8 @@ def run_prophet_forecast(df, steps):
         yearly_seasonality=True,
         weekly_seasonality=True,
         daily_seasonality=True,
-        changepoint_prior_scale=0.04,
-        interval_width=0.9,
+        changepoint_prior_scale=0.05,
+        interval_width=0.8,
         seasonality_mode='multiplicative'
     )
     model.add_seasonality(name='monthly', period=30.5, fourier_order=5)
