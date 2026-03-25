@@ -199,7 +199,7 @@ def run_prophet_forecast(df, steps):
 
     # Identifichiamo i dati reali
     df_output['is_real'] = pd.notnull(df_output['y'])
-    df_weekly['is_real'] = pd.notnull(df_weekly['y'])
+    df_weekly['is_real'] = (pd.notnull(df_weekly['y'])) & (df_weekly['y'] > 0)
 
     final_df = pd.DataFrame({
         'Data': df_output['ds'].dt.strftime('%Y-%m-%d'),
