@@ -97,13 +97,15 @@ def load_and_clean_data(client):
         df['ds']
     )
 
+    
     # Pulizia Valuta
     df['y'] = df['Entrate totali'].astype(str).str.replace('€', '').str.replace('.', '', regex=False)
-    df['y'] = pd.to_numeric(df['y'].str.replace(',', '.', regex=False), errors='coerce')
+    df['y'] = pd.to_numeric(df['y'].str.replace(',', '.', regex=False), errors='coerce')    
     df = df.dropna(subset=['y'])
 
     # Aggregazione duplicati (fondamentale per Prophet)
     df = df.groupby('ds')['y'].sum().reset_index()
+    df.loc[df['ds'].dt.date >= pd.Timestamp.now().date(), 'y'] = np.nan
     
     # Filtro Outlier (es. valori negativi o errori macroscopici nel database)
     df = df[df['y'] >= 0]
