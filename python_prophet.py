@@ -211,7 +211,7 @@ def run_prophet_forecast(df, steps):
     })
 
     final_df_weekly = pd.DataFrame({
-        'Data': df_weekly['week'].dt.strftime('%G-W%V-1'),
+        'Data': df_weekly['week'].dt.strftime('%Y-%m-%d'),
         'Tipo': df_weekly['is_real'].map({True: 'REALE', False: 'PREVISIONE'}),
         'Previsione': pd.to_numeric(df_weekly['yhat'] / divisor).round(2),
         'Dato_reale': pd.to_numeric(df_weekly['y'] / divisor, errors='coerce').round(2),
