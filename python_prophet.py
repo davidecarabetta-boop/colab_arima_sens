@@ -121,7 +121,7 @@ def get_complete_gift_holidays():
             'holiday': 'regali_natale',
             'ds': f'{year}-12-18',
             'lower_window': -25, 'upper_window': 0,
-            'prior_scale': 28
+            'prior_scale': 40
         })
         
         # 11 AGOSTO San Lorenzo
