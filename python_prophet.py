@@ -191,7 +191,7 @@ def run_prophet_forecast(df, steps):
     forecast['trend_val'] = forecast['trend'] / divisor
     forecast['impact_yearly'] = (forecast['yearly'] * forecast['trend']) / divisor
     forecast['impact_monthly'] = (forecast['monthly'] * forecast['trend']) / divisor
-    #forecast['impact_holidays'] = (forecast['holidays'] * forecast['trend']) / divisor
+    forecast['impact_holidays'] = (forecast['holidays'] * forecast['trend']) / divisor
 
     # --- LOGICA DI OUTPUT ---
     df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'trend_val', 
