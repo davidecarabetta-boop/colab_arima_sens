@@ -169,7 +169,7 @@ def run_prophet_forecast(df, steps):
     gift_holidays = get_complete_gift_holidays()
 
     model = Prophet(
-        #holidays=gift_holidays,
+        holidays=gift_holidays,
         yearly_seasonality=True,
         weekly_seasonality=False,
         daily_seasonality=False, 
@@ -195,7 +195,7 @@ def run_prophet_forecast(df, steps):
 
     # --- LOGICA DI OUTPUT ---
     df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'trend_val', 
-                          'impact_yearly', 'impact_monthly']].copy()
+                          'impact_yearly', 'impact_monthly', 'impact_holidays']].copy()
     df_output = df_output.merge(df[['ds', 'y']], on='ds', how='left')
     df_output['week'] = df_output['ds'].dt.to_period('W').apply(lambda r: r.start_time)
 
@@ -208,6 +208,7 @@ def run_prophet_forecast(df, steps):
         'trend_val': 'sum',
         'impact_yearly': 'sum',
         'impact_monthly': 'sum',
+        'impact_holidays': 'sum',
     }).reset_index()
 
     df_output['is_real'] = pd.notnull(df_output['y'])
@@ -225,7 +226,7 @@ def run_prophet_forecast(df, steps):
         'Trend_Base': df_output['trend_val'].round(2),
         'Effetto_Annuale': df_output['impact_yearly'].round(2),
         'Effetto_Mensile': df_output['impact_monthly'].round(2),
-       # 'Effetto_Festivita': df_output['impact_holidays'].round(2)
+        'Effetto_Festivita': df_output['impact_holidays'].round(2)
     })
 
     # --- CREAZIONE FINAL_DF_WEEKLY (Settimanale) ---
@@ -239,7 +240,7 @@ def run_prophet_forecast(df, steps):
         'Trend_Base': df_weekly['trend_val'].round(2),
         'Effetto_Annuale': df_weekly['impact_yearly'].round(2),
         'Effetto_Mensile': df_weekly['impact_monthly'].round(2),
-       # 'Effetto_Festivita': df_weekly['impact_holidays'].round(2)
+        'Effetto_Festivita': df_weekly['impact_holidays'].round(2)
     })
     
     # Pulizia finale (NaN -> "")
