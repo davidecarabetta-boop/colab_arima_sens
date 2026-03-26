@@ -121,7 +121,7 @@ def get_complete_gift_holidays():
             'holiday': 'regali_natale',
             'ds': f'{year}-12-18',
             'lower_window': -25, 'upper_window': 0,
-            'prior_scale': 60
+            'prior_scale': 18
         })
         
         # 11 AGOSTO San Lorenzo
@@ -173,8 +173,8 @@ def run_prophet_forecast(df, steps):
         yearly_seasonality=True,
         weekly_seasonality=False,
         daily_seasonality=False, 
-        changepoint_prior_scale=0.04,
-        holidays_prior_scale=15,
+        changepoint_prior_scale=0.06,
+        holidays_prior_scale=30,
         interval_width=0.8,
         seasonality_mode='multiplicative'
     )
