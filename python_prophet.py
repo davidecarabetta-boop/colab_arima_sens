@@ -112,7 +112,7 @@ def load_and_clean_data(client):
     return df
 
 def get_complete_gift_holidays():
-    years = [2024, 2025, 2026]
+    years = [2023, 2024, 2025, 2026]
     holidays_list = []
 
     for year in years:
@@ -121,7 +121,7 @@ def get_complete_gift_holidays():
             'holiday': 'regali_natale',
             'ds': f'{year}-12-18',
             'lower_window': -25, 'upper_window': 0,
-            'prior_scale': 25
+            'prior_scale': 28
         })
         
         # 11 AGOSTO San Lorenzo
