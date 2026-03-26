@@ -112,7 +112,7 @@ def load_and_clean_data(client):
     return df
 
 def get_complete_gift_holidays():
-    years = [2023, 2024, 2025, 2026]
+    years = [2023, 2024, 2025, 2026, 2027, 2028]
     holidays_list = []
 
     for year in years:
