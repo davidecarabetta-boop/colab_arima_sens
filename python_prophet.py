@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore")
 # --- CONFIGURAZIONE ---
 SERVICE_ACCOUNT_FILE = 'credentials.json'
 SHEET_URL = 'https://docs.google.com/spreadsheets/d/1rSeZ1BtU3ipbFfnTeeXFKMRsH5r2yjprSTsFUmN7aVs/edit?gid=1633708881#gid=1633708881'
-INPUT_SHEET_NAME = 'sensation_dati_storici_arima'
+INPUT_SHEET_NAME = 'sensation_dati_storici_reali'
 OUTPUT_SHEET_NAME = 'Previsione_Output_Prophet_w'
 OUTPUT_SHEET_NAME_WEEK = 'Previsione_Output_Prophet_week'
 
@@ -98,7 +98,7 @@ def load_and_clean_data(client):
     )
 
     # Pulizia Valuta
-    df['y'] = df['Entrate totali'].astype(str).str.replace('€', '').str.replace('.', '', regex=False)
+    df['y'] = df['Entrate reali'].astype(str).str.replace('€', '').str.replace('.', '', regex=False)
     df['y'] = pd.to_numeric(df['y'].str.replace(',', '.', regex=False), errors='coerce')    
     df = df.dropna(subset=['y'])
 
