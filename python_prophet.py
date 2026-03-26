@@ -121,7 +121,7 @@ def get_complete_gift_holidays():
             'holiday': 'regali_natale',
             'ds': f'{year}-12-18',
             'lower_window': -25, 'upper_window': 0,
-            'prior_scale': 18
+            'prior_scale': 30
         })
         
         # 11 AGOSTO San Lorenzo
@@ -129,7 +129,7 @@ def get_complete_gift_holidays():
             'holiday': 'san_lorenzo',
             'ds': f'{year}-08-11',
             'lower_window': -5, 'upper_window': 0,
-            'prior_scale': 18
+            'prior_scale': 15
         })
         
         # 2. SAN VALENTINO 
@@ -137,7 +137,7 @@ def get_complete_gift_holidays():
             'holiday': 'san_valentino',
             'ds': f'{year}-02-14',
             'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 12
+            'prior_scale': 10
         })
 
         # 3. FESTA DELLA MAMMA 
@@ -147,7 +147,7 @@ def get_complete_gift_holidays():
             'holiday': 'festa_mamma',
             'ds': mamma_date,
             'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 4
+            'prior_scale': 10
         })
 
         # 4. BLACK FRIDAY (Quarto venerdì di Novembre)
@@ -158,7 +158,7 @@ def get_complete_gift_holidays():
             'ds': black_friday,
             'lower_window': -4, 
             'upper_window': 3,
-            'prior_scale': 15
+            'prior_scale': 10
         })
 
     return pd.DataFrame(holidays_list)
@@ -173,8 +173,8 @@ def run_prophet_forecast(df, steps):
         yearly_seasonality=True,
         weekly_seasonality=False,
         daily_seasonality=False, 
-        changepoint_prior_scale=0.06,
-        holidays_prior_scale=30,
+        changepoint_prior_scale=0.04,
+        holidays_prior_scale=10,
         interval_width=0.8,
         seasonality_mode='multiplicative'
     )
