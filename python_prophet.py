@@ -169,11 +169,11 @@ def run_prophet_forecast(df, steps):
     gift_holidays = get_complete_gift_holidays()
 
     model = Prophet(
-        holidays=gift_holidays,
+        #holidays=gift_holidays,
         yearly_seasonality=True,
-        weekly_seasonality=True,
+        weekly_seasonality=False,
         daily_seasonality=False, 
-        changepoint_prior_scale=0.05,
+        changepoint_prior_scale=0.04,
         interval_width=0.8,
         seasonality_mode='multiplicative'
     )
@@ -190,13 +190,12 @@ def run_prophet_forecast(df, steps):
     # Moltiplichiamo il coefficiente stagionale per il trend per ottenere il valore in valuta
     forecast['trend_val'] = forecast['trend'] / divisor
     forecast['impact_yearly'] = (forecast['yearly'] * forecast['trend']) / divisor
-    forecast['impact_weekly'] = (forecast['weekly'] * forecast['trend']) / divisor
     forecast['impact_monthly'] = (forecast['monthly'] * forecast['trend']) / divisor
-    forecast['impact_holidays'] = (forecast['holidays'] * forecast['trend']) / divisor
+    #forecast['impact_holidays'] = (forecast['holidays'] * forecast['trend']) / divisor
 
     # --- LOGICA DI OUTPUT ---
     df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'trend_val', 
-                          'impact_yearly', 'impact_weekly', 'impact_monthly', 'impact_holidays']].copy()
+                          'impact_yearly', 'impact_monthly']].copy()
     df_output = df_output.merge(df[['ds', 'y']], on='ds', how='left')
     df_output['week'] = df_output['ds'].dt.to_period('W').apply(lambda r: r.start_time)
 
@@ -208,9 +207,7 @@ def run_prophet_forecast(df, steps):
         'y': 'sum',
         'trend_val': 'sum',
         'impact_yearly': 'sum',
-        'impact_weekly': 'sum',
         'impact_monthly': 'sum',
-        'impact_holidays': 'sum'
     }).reset_index()
 
     df_output['is_real'] = pd.notnull(df_output['y'])
@@ -227,9 +224,8 @@ def run_prophet_forecast(df, steps):
         'CI_Inferiore': pd.to_numeric(df_output['yhat_lower'] / divisor).round(2),
         'Trend_Base': df_output['trend_val'].round(2),
         'Effetto_Annuale': df_output['impact_yearly'].round(2),
-        'Effetto_Settimanale': df_output['impact_weekly'].round(2),
         'Effetto_Mensile': df_output['impact_monthly'].round(2),
-        'Effetto_Festivita': df_output['impact_holidays'].round(2)
+       # 'Effetto_Festivita': df_output['impact_holidays'].round(2)
     })
 
     # --- CREAZIONE FINAL_DF_WEEKLY (Settimanale) ---
@@ -242,9 +238,8 @@ def run_prophet_forecast(df, steps):
         'CI_Inferiore': pd.to_numeric(df_weekly['yhat_lower'] / divisor).round(2),
         'Trend_Base': df_weekly['trend_val'].round(2),
         'Effetto_Annuale': df_weekly['impact_yearly'].round(2),
-        'Effetto_Settimanale': df_weekly['impact_weekly'].round(2),
         'Effetto_Mensile': df_weekly['impact_monthly'].round(2),
-        'Effetto_Festivita': df_weekly['impact_holidays'].round(2)
+       # 'Effetto_Festivita': df_weekly['impact_holidays'].round(2)
     })
     
     # Pulizia finale (NaN -> "")
@@ -280,12 +275,12 @@ def push_to_google_sheets(client, df_forecast, df_forecast_week):
     try:
         worksheet = sheet.worksheet(OUTPUT_SHEET_NAME)
     except gspread.WorksheetNotFound:
-        worksheet = sheet.add_worksheet(title=OUTPUT_SHEET_NAME, rows=1000, cols=10)
+        worksheet = sheet.add_worksheet(title=OUTPUT_SHEET_NAME, rows=1000, cols=15)
 
     try:
         worksheet_week = sheet.worksheet(OUTPUT_SHEET_NAME_WEEK)
     except gspread.WorksheetNotFound:
-        worksheet_week = sheet.add_worksheet(title=OUTPUT_SHEET_NAME_WEEK, rows=1000, cols=10)
+        worksheet_week = sheet.add_worksheet(title=OUTPUT_SHEET_NAME_WEEK, rows=1000, cols=15)
 
     data_to_write = [df_forecast.columns.values.tolist()] + df_forecast.values.tolist()
     data_to_write_week = [df_forecast_week.columns.values.tolist()] + df_forecast_week.values.tolist()
