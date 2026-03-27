@@ -190,14 +190,13 @@ def run_prophet_forecast(df, steps):
     # --- CALCOLO COMPONENTI (Valore Assoluto) ---
     # Moltiplichiamo il coefficiente stagionale per il trend per ottenere il valore in valuta
     forecast['trend_val'] = forecast['trend'] / divisor
-    forecast['impact_daily'] = (forecast['daily'] * forecast['trend']) / divisor
     forecast['impact_weekly'] = (forecast['weekly'] * forecast['trend']) / divisor
     forecast['impact_monthly'] = (forecast['monthly'] * forecast['trend']) / divisor
     forecast['impact_holidays'] = (forecast['holidays'] * forecast['trend']) / divisor
 
     # --- LOGICA DI OUTPUT ---
     df_output = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'trend_val', 
-                          'impact_daily', 'impact_weekly', 'impact_monthly', 'impact_holidays']].copy()
+                          'impact_weekly', 'impact_monthly', 'impact_holidays']].copy()
     df_output = df_output.merge(df[['ds', 'y']], on='ds', how='left')
     df_output['week'] = df_output['ds'].dt.to_period('W').apply(lambda r: r.start_time)
 
@@ -208,7 +207,6 @@ def run_prophet_forecast(df, steps):
         'yhat_upper': 'sum',
         'y': 'sum',
         'trend_val': 'sum',
-        'impact_daily': 'sum',
         'impact_weekly': 'sum',
         'impact_monthly': 'sum',
         'impact_holidays': 'sum',
@@ -227,7 +225,6 @@ def run_prophet_forecast(df, steps):
         'CI_Superiore': pd.to_numeric(df_output['yhat_upper'] / divisor).round(2),
         'CI_Inferiore': pd.to_numeric(df_output['yhat_lower'] / divisor).round(2),
         'Trend_Base': df_output['trend_val'].round(2),
-        'Effetto_Giornaliero': df_output['impact_daily'].round(2),
         'Effetto_Settimanale': df_output['impact_weekly'].round(2),
         'Effetto_Mensile': df_output['impact_monthly'].round(2),
         'Effetto_Festivita': df_output['impact_holidays'].round(2)
@@ -242,7 +239,6 @@ def run_prophet_forecast(df, steps):
         'CI_Superiore': pd.to_numeric(df_weekly['yhat_upper'] / divisor).round(2),
         'CI_Inferiore': pd.to_numeric(df_weekly['yhat_lower'] / divisor).round(2),
         'Trend_Base': df_weekly['trend_val'].round(2),
-        'Effetto_Giornaliero': df_weekly['impact_daily'].round(2),
         'Effetto_Settimanale': df_weekly['impact_weekly'].round(2),
         'Effetto_Mensile': df_weekly['impact_monthly'].round(2),
         'Effetto_Festivita': df_weekly['impact_holidays'].round(2)
