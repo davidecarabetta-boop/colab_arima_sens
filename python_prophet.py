@@ -112,7 +112,7 @@ def get_complete_gift_holidays():
             'holiday': 'regali_natale',
             'ds': f'{year}-12-18',
             'lower_window': -25, 'upper_window': 0,
-            'prior_scale': 30
+            'prior_scale': 15
         })
         
         # 11 AGOSTO San Lorenzo
@@ -127,8 +127,7 @@ def get_complete_gift_holidays():
         holidays_list.append({
             'holiday': 'san_valentino',
             'ds': f'{year}-02-14',
-            'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 10
+            'lower_window': -10, 'upper_window': 0
         })
 
         # 3. FESTA DELLA MAMMA 
@@ -137,8 +136,7 @@ def get_complete_gift_holidays():
         holidays_list.append({
             'holiday': 'festa_mamma',
             'ds': mamma_date,
-            'lower_window': -10, 'upper_window': 0,
-            'prior_scale': 10
+            'lower_window': -10, 'upper_window': 0
         })
 
         # 4. BLACK FRIDAY (Quarto venerdì di Novembre)
@@ -148,8 +146,7 @@ def get_complete_gift_holidays():
             'holiday': 'black_friday_week',
             'ds': black_friday,
             'lower_window': -4, 
-            'upper_window': 3,
-            'prior_scale': 15
+            'upper_window': 3
         })
 
     return pd.DataFrame(holidays_list)
