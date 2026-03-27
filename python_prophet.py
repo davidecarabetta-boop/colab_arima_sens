@@ -164,8 +164,8 @@ def run_prophet_forecast(df, steps):
         yearly_seasonality=False,
         weekly_seasonality=True,
         daily_seasonality=False, 
-        changepoint_prior_scale=0.04,
-        holidays_prior_scale=5,
+        changepoint_prior_scale=0.05,
+        holidays_prior_scale=10,
         interval_width=0.8,
         seasonality_mode='multiplicative'
     )
