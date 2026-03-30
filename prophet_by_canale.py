@@ -34,10 +34,6 @@ def authenticate_google_sheets():
     print("Autenticazione Google Sheets OK.")
     return client
 
-import pandas as pd
-import numpy as np
-from prophet import Prophet
-
 def load_and_clean_data_multi_channel(client):
     sheet = client.open_by_url(SHEET_URL).worksheet(INPUT_SHEET_NAME)
     df_raw = pd.DataFrame(sheet.get_all_records()).copy()
