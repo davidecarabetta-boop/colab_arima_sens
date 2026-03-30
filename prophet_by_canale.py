@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore")
 # --- CONFIGURAZIONE ---
 SERVICE_ACCOUNT_FILE = 'credentials.json'
 SHEET_URL = 'https://docs.google.com/spreadsheets/d/1rSeZ1BtU3ipbFfnTeeXFKMRsH5r2yjprSTsFUmN7aVs/edit?gid=1633708881#gid=1633708881'
-INPUT_SHEET_NAME = 'Sensation_dati_storici_reali'
+INPUT_SHEET_NAME = 'sensation_dati_storici_reali_by_canale'
 OUTPUT_SHEET_NAME = 'Previsione_Output_Prophet_canali'
 
 FORECAST_STEPS = 365
