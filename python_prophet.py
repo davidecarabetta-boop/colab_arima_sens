@@ -98,7 +98,7 @@ def load_and_clean_data(client):
     df = df[df['ds'].dt.date < (pd.Timestamp.now().date() - pd.Timedelta(days=2))]
     
     # Filtro Outlier (es. valori negativi o errori macroscopici nel database)
-    df = df[df['y'] >= 0]
+    df = df[df['y'] > 0]
 
     return df
 
