@@ -308,8 +308,8 @@ def push_to_google_sheets(client, df_forecast, df_forecast_week, df_forecast_mon
     worksheet.update('A1', data_to_write)
     worksheet_week.clear()
     worksheet_week.update('A1', data_to_write_week)
-    worksheet_week.clear()
-    worksheet_week.update('A1', data_to_write_month)
+    worksheet_month.clear()
+    worksheet_month.update('A1', data_to_write_month)
     
     print("Update completato.")
 
