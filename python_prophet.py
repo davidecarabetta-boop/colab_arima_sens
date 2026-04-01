@@ -96,7 +96,7 @@ def load_and_clean_data(client):
 
     # Aggregazione duplicati (fondamentale per Prophet)
     df = df.groupby('ds')['y'].sum().reset_index()
-    df = df[df['ds'].dt.date < (pd.Timestamp.now().date() - pd.Timedelta(days=2))]
+    df = df[df['ds'].dt.date < (pd.Timestamp.now().date() - pd.Timedelta(days=1))]
     
     # Filtro Outlier (es. valori negativi o errori macroscopici nel database)
     df = df[df['y'] > 0]
