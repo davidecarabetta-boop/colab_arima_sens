@@ -107,6 +107,12 @@ def get_complete_gift_holidays():
     years = [2023, 2024, 2025, 2026, 2027, 2028]
     holidays_list = []
 
+    holidays_list.append({
+            'holiday': 'Promo_halloween',
+            'ds': f'2025-10-30',
+            'lower_window': -4, 'upper_window': 0,
+    })
+
     for year in years:
         # 1. NATALE 
         holidays_list.append({
